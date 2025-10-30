@@ -1,4 +1,4 @@
-# Serial Number Extraction (Demo Mode)
+# Serial Number Extraction 
 
 > **⚡ Demo Mode: Extraction is disabled. This UI shows the user experience, but no paid backend/API is active.**
 
@@ -23,7 +23,7 @@ Web app for bulk uploading images and extracting serial numbers via AI/automatio
 ---
 
 ## 🎥 Demo Video
-[![Watch the demo](https://img.shields.io/badge/Watch%20Demo%20Video-blue?logo=youtube)](https://youtu.be/sample-video-link)
+[![Watch the demo](https://img.shields.io/badge/Watch%20Demo%20Video-blue?logo=youtube)](https://youtu.be/r8D6CVWVBps)
 *Replace the link above with your actual video URL once it's live.*
 
 ---
