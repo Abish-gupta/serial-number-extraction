@@ -52,7 +52,7 @@ _The automation backend workflow is not public for intellectual property protect
 ---
 
 ## 📞 Need automation like this for your business?
-Want plug-and-play AI, document extraction, or zero-code automations? [Schedule a call with me!](#add-your-link-here) (link to be provided)
+Want plug-and-play AI, document extraction, or zero-code automations? [Schedule a call with me!](https://calendar.app.google/7z5QueuRqQaQTiRBA)
 
 ---
 
