@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Serial Number Extraction System</title>
+  <style>
+    :root{
+      --bg:#0b1020;
+      --panel:#121a33;
+      --panel-alt:#0f1730;
+      --text:#eaf0ff;
+      --muted:#a3b1d9;
+      --brand:#6ea8fe;
+      --brand-strong:#3a7bff;
+      --danger:#ff5c7a;
+      --success:#59d98c;
+      --border:rgba(255,255,255,0.08);
+      --shadow:0 8px 24px rgba(0,0,0,0.35);
+      --radius:12px;
+      --radius-sm:8px;
+      --focus:0 0 0 3px rgba(110,168,254,0.35);
+    }
+    [data-theme="light"]{
+      --bg:#f6f8ff;
+      --panel:#ffffff;
+      --panel-alt:#f0f4ff;
+      --text:#0f1535;
+      --muted:#4a5680;
+      --brand:#3767ff;
+      --brand-strong:#254de7;
+      --danger:#d42555;
+      --success:#1e9e5a;
+      --border:rgba(5,15,35,0.08);
+      --shadow:0 8px 24px rgba(16,24,40,0.12);
+    }
+
+    html,body{height:100%}
+    body{font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Arial,Helvetica,sans-serif;max-width:980px;margin:0 auto;padding:28px 20px;background:radial-gradient(1200px 600px at 80% -200px,rgba(58,123,255,0.25),transparent),radial-gradient(800px 500px at -150px 20%,rgba(21,201,142,0.18),transparent),var(--bg);color:var(--text)}
+    .app-header{display:flex;justify-content:space-between;align-items:center;margin:14px 0 26px 0}
+    .brand{display:flex;gap:12px;align-items:center}
+    .brand .logo{width:40px;height:40px;border-radius:12px;background:linear-gradient(135deg,var(--brand),#8fd3fe);box-shadow:var(--shadow);display:grid;place-items:center;color:#00163a;font-weight:900}
+    .brand h1{margin:0;font-size:22px;letter-spacing:0.2px}
+    .theme-toggle{background:transparent;color:var(--text);border:1px solid var(--border);padding:10px 14px;border-radius:999px;cursor:pointer}
+    .theme-toggle:hover{background:var(--panel-alt)}
+
+    .panel{background:linear-gradient(180deg,var(--panel),var(--panel-alt));border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow)}
+    .panel.section{padding:22px}
+    .row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+    @media (max-width:820px){.row{grid-template-columns:1fr}}
+
+    .batch-id{background:linear-gradient(90deg,rgba(110,168,254,0.15),rgba(110,168,254,0));padding:12px;border-radius:var(--radius-sm);font-weight:700;color:var(--brand)}
+    label{font-weight:600;color:var(--muted)}
+    input,select{width:100%;padding:12px 12px;border:1px solid var(--border);background:rgba(255,255,255,0.02);color:var(--text);border-radius:10px;box-sizing:border-box;outline:none}
+    input:focus,select:focus{box-shadow:var(--focus);border-color:transparent}
+
+    .actions{display:flex;gap:10px;flex-wrap:wrap}
+    button{padding:12px 18px;font-size:15px;border:none;border-radius:10px;cursor:pointer;color:#fff}
+    #submitBtn{background:linear-gradient(135deg,var(--brand-strong),var(--brand))}
+    #submitBtn:hover{filter:brightness(1.05)}
+    #clearBtn{background:linear-gradient(135deg,#b32c46,var(--danger))}
+    #clearBtn:hover{filter:brightness(1.05)}
+    button:disabled{opacity:.6;cursor:not-allowed}
+
+    .dash{border:2px dashed var(--border);border-radius:var(--radius);padding:28px;text-align:center;background:rgba(255,255,255,0.02);margin:18px 0;transition:all .2s ease}
+    .dash.dragover{background:rgba(110,168,254,0.08);border-color:rgba(110,168,254,0.55)}
+    .dash small{color:var(--muted)}
+
+    .counter{background:rgba(110,168,254,0.12);border:1px dashed rgba(110,168,254,0.45);border-radius:10px;padding:10px;font-weight:700;color:var(--brand);text-align:center}
+    .counter:empty{display:none}
+
+    #imagePreview{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:10px;margin-top:12px}
+    #imagePreview img{width:100%;height:110px;object-fit:cover;border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow)}
+
+    .progress{height:10px;background:rgba(255,255,255,0.06);border-radius:999px;border:1px solid var(--border);overflow:hidden}
+    .progress > span{display:block;height:100%;width:0%;background:linear-gradient(90deg,var(--brand),#71f5c4)}
+
+    /* Modal overlay */
+    #overlay {display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:9999;justify-content:center;align-items:center;color:#fff;font-size:20px;font-weight:bold}
+    #overlay .box {background:#0b1020;padding:26px;border-radius:12px;text-align:center;border:1px solid var(--border);box-shadow:var(--shadow)}
+
+    /* Result link */
+    #resultBox {margin-top:20px;padding:15px;background:rgba(46,164,79,0.12);border:1px solid rgba(46,164,79,0.45);border-radius:10px;display:none}
+    #resultBox a { color:var(--brand); font-weight:700; text-decoration:none; }
+    #resultBox a:hover { text-decoration:underline; }
+
+    footer{margin:30px 0;color:var(--muted);text-align:center}
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="logo">SN</div>
+    <h1>Serial Number Extraction</h1>
+  </div>
+  <button id="themeToggle" class="theme-toggle" type="button" aria-label="Toggle theme">🌙</button>
+  
+  
+  
+</header>
+<div id="demoBanner" class="panel section" style="background:rgba(58,123,255,0.07);border:2px dashed #59d98c;margin-bottom:18px;text-align:center;font-weight:700;color:#2576d9;">
+  ⚡ Demo Mode: Serial number extraction is disabled in this live demo. Backend requires paid API.
+</div>
+
+<section class="panel section" aria-labelledby="batch-section">
+  <h2 id="batch-section" style="margin:0 0 12px 0;font-size:16px;color:var(--muted);font-weight:700">Batch</h2>
+  <div id="batchDisplay" class="batch-id">Batch ID will appear here</div>
+</section>
+
+<form id="serialForm" class="panel section" style="margin-top:16px">
+  <label>Inward / Outward</label>
+  <select id="movementSelect" name="movement" required>
+    <option value="">Select Movement</option>
+    <option value="inward">Inward</option>
+    <option value="outward">Outward</option>
+  </select>
+  <div id="ioStatus" class="counter" style="margin-top:8px">Select Inward or Outward</div>
+
+  <label>SKU</label>
+  <select name="SKU" required onchange="makeBatchId()">
+    <option value="Te">Select SKU</option>
+    <option value="AXITEC">AXITEC (262503440XXXX)</option>
+    <option value="Jinasolar">Jinasolar (R01XXXX)</option>
+    <option value="WS_Vendor">WS Vendor (WS06XXX)</option>
+  </select>
+
+  <label>Warehouse</label>
+  <select name="warehouse" required onchange="makeBatchId()">
+    <option value="">Select Warehouse</option>
+    <option value="MUMBAI">Mumbai</option>
+    <option value="DELHI">Delhi</option>
+    <option value="PUNE">Pune</option>
+  </select>
+
+  <label>Invoice Number</label>
+  <select id="invoiceSelect" name="invoice_number" required>
+    <option value="">Select Invoice ID</option>
+  </select>
+
+  <label>Date</label>
+  <input name="date" type="date" required>
+
+  <div id="pasteArea" class="dash" tabindex="0" aria-label="Paste or drop images here">
+    <div style="font-weight:700">Drop images here or paste (Ctrl/Cmd + V)</div>
+    <small>PNG, JPG up to 30 files</small>
+  </div>
+
+  <label>Upload Files</label>
+  <input id="fileInput" type="file" name="images" multiple accept="image/*">
+
+  <div class="counter">Images added: <span id="imgCount">0</span> / 30</div>
+  <div class="progress" aria-label="Upload progress"><span id="imgProgress"></span></div>
+
+  <input id="batchHidden" type="hidden" name="batch_id">
+
+  <button id="submitBtn" type="submit">Process Serial Numbers</button>
+  <button id="clearBtn"  type="button">Clear All</button>
+</form>
+
+<section class="panel section" style="margin-top:16px">
+  <h2 style="margin:0 0 10px 0;font-size:16px;color:var(--muted);font-weight:700">Preview</h2>
+  <div id="imagePreview"></div>
+</section>
+
+<!-- Loading overlay -->
+<div id="overlay">
+  <div class="box">⏳ Please wait… Processing your files</div>
+</div>
+
+<!-- Result box -->
+<!-- (disabled in demo)-->
+
+<footer>
+  Built for speed and clarity — v1.1
+</footer>
+
+<script>
+/* ---------- helpers ---------- */
+
+const $ = id => document.getElementById(id);
+const imgFiles   = [];          // keeps File / Blob objects
+const maxFiles   = 30;
+const endpoint   = 'http://localhost:5678/webhook-test/serial-extraction';
+const inwardApi  = 'https://mocki.io/v1/a8cf4b59-c5aa-4a85-a2a1-5bdfe990db24';
+const outwardApi = 'https://mocki.io/v1/86ef6861-61b3-451c-b509-0408424c8fda';
+const skuApi     = 'https://mocki.io/v1/454b9123-e62e-4b4d-84c4-6cdf198b3b35';
+const whApi      = 'https://mocki.io/v1/486b060b-87df-412f-9f3b-45f4ec0c383e';
+
+  /* ---------- theme ---------- */
+  (function initTheme(){
+    const saved=localStorage.getItem('theme');
+    if(saved==="light") document.documentElement.setAttribute('data-theme','light');
+    updateThemeButton();
+  })();
+  function updateThemeButton(){
+    const isLight=document.documentElement.getAttribute('data-theme')==='light';
+    const btn=$('themeToggle'); if(!btn) return; btn.textContent=isLight?'🌞':'🌙';
+    btn.setAttribute('aria-label',isLight?'Switch to dark theme':'Switch to light theme');
+  }
+  $('themeToggle').addEventListener('click',()=>{
+    const isLight=document.documentElement.getAttribute('data-theme')==='light';
+    if(isLight){document.documentElement.removeAttribute('data-theme');localStorage.setItem('theme','dark');}
+    else {document.documentElement.setAttribute('data-theme','light');localStorage.setItem('theme','light');}
+    updateThemeButton();
+  });
+
+/* ---------- batch-ID generator ---------- */
+function sanitizeAlphaNum (text) { return String(text||'').toUpperCase().replace(/[^A-Z0-9]/g,''); }
+function getMovementFlag () { const mv=$('movementSelect').value; return mv==='inward'?'I':(mv==='outward'?'O':''); }
+function getDateYYMMMDD (d=new Date()){const yy=String(d.getFullYear()).slice(-2);const m=d.toLocaleString('default',{month:'short'}).toUpperCase().replace(/\./g,'');const dd=String(d.getDate()).padStart(2,'0');return yy+m+dd;}
+function getCounterForKey (key){const raw=localStorage.getItem('batchCounter_'+key);const n=raw?parseInt(raw,10):0;return Number.isFinite(n)?n:0;}
+function setCounterForKey (key,value){try{localStorage.setItem('batchCounter_'+key,String(value));}catch(_){}} 
+function makeBatchId () {
+  const skuRaw=document.querySelector('[name="SKU"]').value;
+  const whRaw=document.querySelector('[name="warehouse"]').value;
+  const mov=getMovementFlag();
+  if(!skuRaw||!whRaw||!mov){$('batchDisplay').textContent='';$('batchHidden').value='';return;}
+  const sku3=sanitizeAlphaNum(skuRaw).slice(0,3);
+  const wh2=sanitizeAlphaNum(whRaw).slice(0,2);
+  const date=getDateYYMMMDD();
+  const key=`${date}_${sku3}_${wh2}_${mov}`;
+  const next=getCounterForKey(key)+1;
+  const counter2=String(Math.min(next,99)).padStart(2,'0');
+  const id=`${key}_${counter2}`;
+  window.currentBatchKey=key;window.currentBatchCounter=next;
+  $('batchDisplay').textContent=id;$('batchHidden').value=id;
+}
+
+/* ---------- image handling ---------- */
+  function updateCounter () {
+    $('imgCount').textContent=imgFiles.length;
+    const pct=Math.min(100,Math.round((imgFiles.length/maxFiles)*100));
+    const bar=$('imgProgress'); if(bar) bar.style.width=pct+'%';
+  }
+function addPreview (blob){const img=new Image();img.onload=()=>URL.revokeObjectURL(img.src);img.src=URL.createObjectURL(blob);$('imagePreview').appendChild(img);}
+  $('fileInput').addEventListener('change',e=>{for(const file of e.target.files){if(imgFiles.length>=maxFiles)break;if(!file.type.startsWith('image'))continue;imgFiles.push(file);addPreview(file);}updateCounter();});
+  $('pasteArea').addEventListener('paste',e=>{e.preventDefault();for(const item of e.clipboardData.items){if(item.type.startsWith('image')&&imgFiles.length<maxFiles){const blob=item.getAsFile();imgFiles.push(blob);addPreview(blob);}}updateCounter();});
+  // Drag & drop
+  ;['dragenter','dragover'].forEach(ev=>$('pasteArea').addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();$('pasteArea').classList.add('dragover');}));
+  ;['dragleave','drop'].forEach(ev=>$('pasteArea').addEventListener(ev,e=>{e.preventDefault();e.stopPropagation();$('pasteArea').classList.remove('dragover');}));
+  $('pasteArea').addEventListener('drop',e=>{const files=[...(e.dataTransfer?.files||[])];for(const f of files){if(imgFiles.length>=maxFiles)break;if(!f.type.startsWith('image'))continue;imgFiles.push(f);addPreview(f);}updateCounter();});
+
+/* ---------- clear ---------- */
+$('clearBtn').onclick=()=>{imgFiles.length=0;updateCounter();$('imagePreview').innerHTML='';$('serialForm').reset();makeBatchId();};
+
+/* ---------- submit ---------- */
+$('serialForm').addEventListener('submit',function(e){
+  e.preventDefault();
+  alert('Demo only: Backend API is not public due to paid usage.\nExtraction is disabled in this demo.');
+});
+
+/* ---------- inward/outward handler ---------- */
+document.addEventListener('change',async e=>{
+  const target=e.target;
+  if(target&&target.id==='movementSelect'){
+    const choice=target.value;if(!choice){$('ioStatus').textContent='Select Inward or Outward';return;}
+    const api=choice==='inward'?inwardApi:outwardApi;
+    $('ioStatus').textContent='Fetching '+choice+' data…';
+    function generateFallbackInvoiceIds(prefix,count){
+      const now=new Date();
+      const y=now.getFullYear();
+      const m=String(now.getMonth()+1).padStart(2,'0');
+      const d=String(now.getDate()).padStart(2,'0');
+      const date=y+''+m+''+d;
+      const arr=[];for(let i=0;i<count;i++){arr.push('INV-'+(prefix==='inward'?'IN':'OUT')+'-'+date+'-'+String(Math.floor(Math.random()*10000)).padStart(4,'0'));}
+      return arr;
+    }
+    try{const res=await fetch(api,{headers:{Accept:'application/json'}});const data=await res.json();
+      let ids=(Array.isArray(data?.data)?data.data:Array.isArray(data?.ids)?data.ids:Array.isArray(data?.nfts)?data.nfts.map(x=>x.id):[]).map(String);
+      if(!ids.length){ids=generateFallbackInvoiceIds(choice,10);$('ioStatus').textContent='';}
+      else{$('ioStatus').textContent='Loaded '+choice+' data ('+ids.length+' items)';}
+      window.ioData={choice,data,ids};
+      const sel=$('invoiceSelect');sel.innerHTML='<option value="">Select Invoice ID</option>';
+      ids.forEach(id=>{const opt=document.createElement('option');opt.value=id;opt.textContent=id;sel.appendChild(opt);});
+    }catch(err){
+      const ids=generateFallbackInvoiceIds(choice,10);
+      $('ioStatus').textContent='';
+      const sel=$('invoiceSelect');sel.innerHTML='<option value="">Select Invoice ID</option>';
+      ids.forEach(id=>{const opt=document.createElement('option');opt.value=id;opt.textContent=id;sel.appendChild(opt);});
+    }
+    makeBatchId();
+  }
+});
+
+/* ---------- init ---------- */
+async function populateSelectFromApi(selectEl,url,placeholderText){try{const res=await fetch(url,{headers:{Accept:'application/json'}});const data=await res.json();const items=Array.isArray(data?.data)?data.data.map(String):[];if(!items.length)return;const first=selectEl.querySelector('option');selectEl.innerHTML='';const ph=document.createElement('option');ph.value='';ph.textContent=placeholderText;selectEl.appendChild(ph);items.forEach(txt=>{const opt=document.createElement('option');opt.value=txt;opt.textContent=txt;selectEl.appendChild(opt);});}catch(e){}}
+async function initLookups (){await Promise.all([populateSelectFromApi(document.querySelector('[name=\"SKU\"]'),skuApi,'Select SKU'),populateSelectFromApi(document.querySelector('[name=\"warehouse\"]'),whApi,'Select Warehouse')]);}
+function clearOldCountersIfNeeded(){const today=getDateYYMMMDD();const last=localStorage.getItem('batchCounter_lastReset');if(last!==today){try{const keys=Object.keys(localStorage);keys.forEach(k=>{if(k.startsWith('batchCounter_'))localStorage.removeItem(k);});}catch(_){}try{localStorage.setItem('batchCounter_lastReset',today);}catch(_){}}}
+function scheduleMidnightReset(){const now=new Date();const next=new Date(now);next.setHours(24,0,0,0);const ms=next-now;setTimeout(()=>{clearOldCountersIfNeeded();scheduleMidnightReset();makeBatchId();},ms);}
+initLookups().finally(()=>{clearOldCountersIfNeeded();scheduleMidnightReset();makeBatchId();$('pasteArea').focus();});
+</script>
+</body>
+</html>
