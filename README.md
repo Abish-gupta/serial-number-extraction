@@ -42,7 +42,7 @@ serial-number-extraction-github/
 ---
 
 ## 👉 How to Use
-- **You can try the live demo instantly here:** [Live Demo](https://your-demo-link.com)
+- **You can try the live demo instantly here:** [Live Demo]([https://your-demo-link.com](https://abish-gupta.github.io/serial-number-extraction/))
   *(replace with your own URL after deployment)*
 
 ---
