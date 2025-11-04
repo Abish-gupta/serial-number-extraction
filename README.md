@@ -42,7 +42,7 @@ serial-number-extraction-github/
 ---
 
 ## 👉 How to Use
-- **You can try the live demo instantly here:** [Live Demo](https://abish-gupta.github.io/serial-number-extraction)
+- **You can try the live demo instantly here:** [Live Demo](https://serial-number-extraction.netlify.app/))
 
 ---
 
